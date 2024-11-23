@@ -125,7 +125,7 @@ local function UpdateStats()
 end
 
 -- Create the UI frame
-StatcapperFrame:SetSize(250, 150)
+StatcapperFrame:SetSize(300, 200) -- Larger frame for better visibility
 StatcapperFrame:SetPoint("CENTER")
 StatcapperFrame:EnableMouse(true)
 StatcapperFrame:SetMovable(true)
@@ -133,11 +133,16 @@ StatcapperFrame:RegisterForDrag("LeftButton")
 StatcapperFrame:SetScript("OnDragStart", StatcapperFrame.StartMoving)
 StatcapperFrame:SetScript("OnDragStop", StatcapperFrame.StopMovingOrSizing)
 
+-- Add a background to the frame
 StatcapperFrame.bg = StatcapperFrame:CreateTexture(nil, "BACKGROUND")
 StatcapperFrame.bg:SetAllPoints(true)
-StatcapperFrame.bg:SetColorTexture(0, 0, 0, 0.5)
+StatcapperFrame.bg:SetColorTexture(0.1, 0.1, 0.1, 0.8) -- Dark gray background with 80% opacity
 
-StatcapperFrame.statsText = StatcapperFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-- Add a title text
+StatcapperFrame.statsText = StatcapperFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 StatcapperFrame.statsText:SetPoint("TOPLEFT", StatcapperFrame, "TOPLEFT", 10, -10)
+StatcapperFrame.statsText:SetText("Statcapper Loaded!") -- Initial placeholder text
 
+-- Hook updates to dynamically change the stats display
 StatcapperFrame:SetScript("OnEvent", UpdateStats)
+
