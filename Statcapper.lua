@@ -14,12 +14,12 @@ local statCaps = {
     },
     DRUID = {
         BALANCE = { Hit = 17, Haste = 20 },
-        FERAL = { Hit = 8, Expertise = 26, Crit = 25 },
+        FERAL = { Hit = 8, Expertise = 26, Crit = 25, ArmorPen = 1400 },
         RESTORATION = { Haste = 20 },
     },
     HUNTER = {
-        BEASTMASTERY = { Hit = 8, Crit = 25 },
-        MARKSMANSHIP = { Hit = 8, Crit = 25 },
+        BEASTMASTERY = { Hit = 8, Crit = 25, ArmorPen = 1400 },
+        MARKSMANSHIP = { Hit = 8, Crit = 25, ArmorPen = 1400 },
         SURVIVAL = { Hit = 8, Crit = 25 },
     },
     MAGE = {
@@ -38,13 +38,13 @@ local statCaps = {
         SHADOW = { Hit = 17, Crit = 20 },
     },
     ROGUE = {
-        ASSASSINATION = { Hit = 8, Expertise = 26, Crit = 25 },
-        COMBAT = { Hit = 8, Expertise = 26, Crit = 25 },
+        ASSASSINATION = { Hit = 8, Expertise = 26, Crit = 25, ArmorPen = 1400 },
+        COMBAT = { Hit = 8, Expertise = 26, Crit = 25, ArmorPen = 1400 },
         SUBTLETY = { Hit = 8, Expertise = 26, Crit = 25 },
     },
     SHAMAN = {
         ELEMENTAL = { Hit = 17, Crit = 20 },
-        ENHANCEMENT = { Hit = 8, Expertise = 26, Haste = 15 },
+        ENHANCEMENT = { Hit = 8, Expertise = 26, Haste = 15, ArmorPen = 1400 },
         RESTORATION = { Haste = 20 },
     },
     WARLOCK = {
@@ -53,8 +53,8 @@ local statCaps = {
         DESTRUCTION = { Hit = 17, Crit = 20 },
     },
     WARRIOR = {
-        ARMS = { Hit = 8, Expertise = 26, Crit = 25 },
-        FURY = { Hit = 8, Expertise = 26, Crit = 25 },
+        ARMS = { Hit = 8, Expertise = 26, Crit = 25, ArmorPen = 1400 },
+        FURY = { Hit = 8, Expertise = 26, Crit = 25, ArmorPen = 1400 },
         PROTECTION = { Hit = 8, Expertise = 26, Block = 102.4 },
     },
 }
@@ -82,6 +82,9 @@ local function GetPlayerStats()
         Crit = GetCritChance(),
         Haste = GetHaste(),
         Block = GetBlockChance(),
+        ArmorPen = GetCombatRatingBonus(CR_ARMOR_PENETRATION),
+        AttackPower = UnitAttackPower("player"),
+        SpellPower = GetSpellBonusDamage(7), -- 7 is the magic school for highest spell power
     }
     return stats
 end
@@ -93,7 +96,12 @@ local function CheckStatCaps(class, spec, stats)
     if caps then
         for stat, cap in pairs(caps) do
             if stats[stat] then
-                results[stat] = stats[stat] >= cap and "Capped" or "Not Capped"
+                local needed = math.max(0, cap - stats[stat])
+                results[stat] = {
+                    current = stats[stat],
+                    needed = needed,
+                    cap = cap,
+                }
             end
         end
     end
@@ -104,7 +112,7 @@ end
 local function UpdateStats()
     local class = select(2, UnitClass("player"))
     local specIndex = GetPlayerSpec()
-    local specName = statCaps[class] and (specIndex and next(statCaps[class], specIndex - 1)) or "Unknown"
+    local specName = specIndex and (statCaps[class] and next(statCaps[class], specIndex - 1)) or "Unknown"
     local stats = GetPlayerStats()
     local caps = CheckStatCaps(class, specName, stats)
 
@@ -116,16 +124,29 @@ local function UpdateStats()
     end
 
     text = text .. "Stats:\n"
+    for stat, values in pairs(caps) do
+        text = text .. string.format(
+            "- %s (%d): %.2f (%d)\n",
+            stat,
+            values.cap,
+            values.current,
+            values.needed
+        )
+    end
+
+    -- Add uncapped stats
+    text = text .. "\nAdditional Stats:\n"
     for stat, value in pairs(stats) do
-        local capStatus = caps and caps[stat] or "No Cap"
-        text = text .. string.format("- %s: %.2f (%s)\n", stat, value, capStatus)
+        if not caps or not caps[stat] then
+            text = text .. string.format("- %s: %.2f\n", stat, value)
+        end
     end
 
     StatcapperFrame.statsText:SetText(text)
 end
 
 -- Create the addon frame with BackdropTemplate
-StatcapperFrame:SetSize(300, 200)
+StatcapperFrame:SetSize(300, 300)
 StatcapperFrame:SetPoint("CENTER")
 StatcapperFrame:EnableMouse(true)
 StatcapperFrame:SetMovable(true)
