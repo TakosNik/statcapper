@@ -104,13 +104,13 @@ end
 local function UpdateStats()
     local class = select(2, UnitClass("player"))
     local specIndex = GetPlayerSpec()
-    local spec = specIndex and ({ "BLOOD", "FROST", "UNHOLY" })[specIndex] -- Example for DKs
+    local specName = statCaps[class] and (specIndex and next(statCaps[class], specIndex - 1)) or "Unknown"
     local stats = GetPlayerStats()
-    local caps = CheckStatCaps(class, spec, stats)
+    local caps = CheckStatCaps(class, specName, stats)
 
     local text = string.format("Class: %s\n", class)
-    if spec then
-        text = text .. string.format("Spec: %s\n", spec)
+    if specName then
+        text = text .. string.format("Spec: %s\n", specName)
     else
         text = text .. "Spec: Unknown\n"
     end
@@ -124,8 +124,8 @@ local function UpdateStats()
     StatcapperFrame.statsText:SetText(text)
 end
 
--- Create the UI frame
-StatcapperFrame:SetSize(300, 200) -- Larger frame for better visibility
+-- Create the addon frame with BackdropTemplate
+StatcapperFrame:SetSize(300, 200)
 StatcapperFrame:SetPoint("CENTER")
 StatcapperFrame:EnableMouse(true)
 StatcapperFrame:SetMovable(true)
@@ -133,16 +133,30 @@ StatcapperFrame:RegisterForDrag("LeftButton")
 StatcapperFrame:SetScript("OnDragStart", StatcapperFrame.StartMoving)
 StatcapperFrame:SetScript("OnDragStop", StatcapperFrame.StopMovingOrSizing)
 
--- Add a background to the frame
-StatcapperFrame.bg = StatcapperFrame:CreateTexture(nil, "BACKGROUND")
-StatcapperFrame.bg:SetAllPoints(true)
-StatcapperFrame.bg:SetColorTexture(0.1, 0.1, 0.1, 0.8) -- Dark gray background with 80% opacity
+-- Define the backdrop
+StatcapperFrame:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true,
+    tileSize = 32,
+    edgeSize = 16,
+    insets = { left = 8, right = 8, top = 8, bottom = 8 }
+})
+StatcapperFrame:SetBackdropColor(0, 0, 0, 0.8)
 
 -- Add a title text
-StatcapperFrame.statsText = StatcapperFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-StatcapperFrame.statsText:SetPoint("TOPLEFT", StatcapperFrame, "TOPLEFT", 10, -10)
-StatcapperFrame.statsText:SetText("Statcapper Loaded!") -- Initial placeholder text
+StatcapperFrame.title = StatcapperFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+StatcapperFrame.title:SetPoint("TOP", StatcapperFrame, "TOP", 0, -10)
+StatcapperFrame.title:SetText("Statcapper")
 
--- Hook updates to dynamically change the stats display
+-- Add a text area for stats
+StatcapperFrame.statsText = StatcapperFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+StatcapperFrame.statsText:SetPoint("TOPLEFT", StatcapperFrame, "TOPLEFT", 10, -30)
+StatcapperFrame.statsText:SetJustifyH("LEFT")
+StatcapperFrame.statsText:SetWidth(280)
+
+-- Hook events to update stats
 StatcapperFrame:SetScript("OnEvent", UpdateStats)
 
+-- Show the frame initially
+StatcapperFrame:Show()
