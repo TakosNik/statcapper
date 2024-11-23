@@ -112,7 +112,7 @@ end
 local function UpdateStats()
     local class = select(2, UnitClass("player"))
     local specIndex = GetPlayerSpec()
-    local specName = specIndex and (statCaps[class] and next(statCaps[class], specIndex - 1)) or "Unknown"
+    local specName = statCaps[class] and next(statCaps[class], specIndex - 1) or "Unknown"
     local stats = GetPlayerStats()
     local caps = CheckStatCaps(class, specName, stats)
 
@@ -150,9 +150,20 @@ StatcapperFrame:SetSize(300, 300)
 StatcapperFrame:SetPoint("CENTER")
 StatcapperFrame:EnableMouse(true)
 StatcapperFrame:SetMovable(true)
+StatcapperFrame:SetResizable(true)
 StatcapperFrame:RegisterForDrag("LeftButton")
 StatcapperFrame:SetScript("OnDragStart", StatcapperFrame.StartMoving)
 StatcapperFrame:SetScript("OnDragStop", StatcapperFrame.StopMovingOrSizing)
+
+-- Add resizable grip
+local resizeGrip = CreateFrame("Frame", nil, StatcapperFrame, "BackdropTemplate")
+resizeGrip:SetSize(16, 16)
+resizeGrip:SetPoint("BOTTOMRIGHT")
+resizeGrip:SetBackdrop({
+    bgFile = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up",
+})
+resizeGrip:SetScript("OnMouseDown", function() StatcapperFrame:StartSizing("BOTTOMRIGHT") end)
+resizeGrip:SetScript("OnMouseUp", function() StatcapperFrame:StopMovingOrSizing() end)
 
 -- Define the backdrop
 StatcapperFrame:SetBackdrop({
